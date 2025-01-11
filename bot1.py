@@ -1,5 +1,7 @@
+import os
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
+from flask import Flask, request
 
 CONTINENTS = [["Африка"], ["Азия"], ["Европа"], ["Северная Америка"], ["Южная Америка"], ["Австралия"]]
 
@@ -29,9 +31,9 @@ async def cancel(update: Update, context):
     return ConversationHandler.END
 
 def main():
-    import os
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     application = ApplicationBuilder().token(token).build()
+    
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -41,8 +43,19 @@ def main():
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
+    
     application.add_handler(conv_handler)
-    application.run_polling()
+    
+    # Flask application for Render to bind to a port
+    app = Flask(__name__)
+
+    @app.route('/')
+    def home():
+        return 'Bot is running'
+
+    if __name__ == "__main__":
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+        application.run_polling()
 
 if __name__ == "__main__":
     main()
