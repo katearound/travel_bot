@@ -13,11 +13,11 @@ CONTINENTS = [["Африка"], ["Азия"], ["Европа"], ["Северна
 # Создание экземпляра Flask
 app = Flask(__name__)
 
-# Установить webhook
-def set_webhook():
+# Асинхронная функция для установки webhook
+async def set_webhook():
     bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
     webhook_url = f"https://travel-bot-22jb.onrender.com/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    bot.set_webhook(url=webhook_url)
+    await bot.set_webhook(url=webhook_url)
 
 # Обработчик команд
 async def start(update: Update, context):
