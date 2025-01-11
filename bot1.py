@@ -55,7 +55,7 @@ def webhook():
     return 'OK'
 
 # Настройка бота
-def main():
+async def main():
     # Создаем бота
     application = create_application()
     
@@ -75,12 +75,13 @@ def main():
     # Устанавливаем вебхук
     bot = application.bot
     webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_URL')}/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    bot.set_webhook(url=webhook_url)
-
+    await bot.set_webhook(url=webhook_url)  # Добавлен await
+    
     # Запуск Flask
     if __name__ == "__main__":
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-        application.run_polling()
+        await application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
