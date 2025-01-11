@@ -13,15 +13,17 @@ CONTINENTS = [["Африка"], ["Азия"], ["Европа"], ["Северна
 # Создание экземпляра Flask
 app = Flask(__name__)
 
+# Инициализация бота
+bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
+
 # Асинхронная функция для установки webhook
 async def set_webhook():
-    bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
     webhook_url = f"https://travel-bot-22jb.onrender.com/{os.getenv('TELEGRAM_BOT_TOKEN')}"
     await bot.set_webhook(url=webhook_url)
 
 # Обработчик команд
 async def start(update: Update, context):
-    keyboard = [["Знаю точное место", "Не знаю точное место"]]
+    keyboard = [["Знаю точное место", "Не знаю точного места"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     await update.message.reply_text("Привет! Куда вы хотите поехать?", reply_markup=reply_markup)
     return 1
@@ -49,7 +51,7 @@ async def cancel(update: Update, context):
 @app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
 def webhook():
     json_str = request.get_data().decode('UTF-8')
-    update = Update.de_json(json_str, bot)
+    update = Update.de_json(json_str, bot)  # Используем глобальный объект bot
     application.update_queue.put(update)
     return 'ok', 200
 
