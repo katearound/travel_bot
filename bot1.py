@@ -78,6 +78,7 @@ async def main():
     await bot.set_webhook(url=webhook_url)  # Вызов с await, так как FastAPI поддерживает асинхронность
 
     # Запуск FastAPI
+if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
