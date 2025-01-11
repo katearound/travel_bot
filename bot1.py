@@ -1,7 +1,7 @@
 import logging
 import os
 import json
-from flask import Flask, request
+from fastapi import FastAPI, Request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
 from telegram import ReplyKeyboardMarkup
@@ -44,18 +44,18 @@ async def cancel(update: Update, context):
     await update.message.reply_text("Прощайте!")
     return ConversationHandler.END
 
-# Вебхук для получения обновлений от Telegram
-app = Flask(__name__)
+# Настройка FastAPI
+app = FastAPI()
 
-@app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
-def webhook():
-    json_str = request.get_data().decode('UTF-8')
-    update = Update.de_json(json.loads(json_str), bot)  # bot должен быть определен до этого
-    application.dispatcher.process_update(update)  # dispatcher должен быть у объекта application
-    return 'OK'
+@app.post(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}')
+async def webhook(request: Request):
+    json_str = await request.json()
+    update = Update.de_json(json_str, bot)
+    application.dispatcher.process_update(update)
+    return {'status': 'ok'}
 
 # Настройка бота
-def main():
+async def main():
     # Создаем бота
     application = create_application()
 
@@ -75,10 +75,12 @@ def main():
     # Устанавливаем вебхук
     bot = application.bot
     webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_URL')}/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    bot.set_webhook(url=webhook_url)  # Здесь уже синхронный вызов
+    await bot.set_webhook(url=webhook_url)  # Вызов с await, так как FastAPI поддерживает асинхронность
 
-    # Запуск Flask
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    # Запуск FastAPI
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
