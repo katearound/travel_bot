@@ -54,7 +54,7 @@ def webhook():
     return 'ok', 200
 
 # Настройка бота и webhook
-def main():
+async def main():
     # Токен бота
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     application = ApplicationBuilder().token(token).build()
@@ -72,10 +72,11 @@ def main():
     application.add_handler(conv_handler)
     
     # Настроить webhook
-    set_webhook()
+    await set_webhook()
 
     # Запуск Flask
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
