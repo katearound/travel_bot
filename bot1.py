@@ -50,8 +50,13 @@ app = FastAPI()
 @app.post(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}')
 async def webhook(request: Request):
     json_str = await request.json()
-    update = Update.de_json(json_str, bot)
-    application.dispatcher.process_update(update)
+    
+    # Создаем приложение бота внутри вебхука
+    application = create_application()  # создаем приложение
+    bot = application.bot  # получаем объект бота
+    update = Update.de_json(json_str, bot)  # передаем объект бота в функцию
+    application.dispatcher.process_update(update)  # обрабатываем обновление
+    
     return {'status': 'ok'}
 
 # Настройка бота
@@ -72,20 +77,10 @@ async def main():
 
     application.add_handler(conv_handler)
 
-    # Настройка вебхука
-@app.post(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}')
-async def webhook(request: Request):
-    json_str = await request.json()
-    application = create_application()  # создаем приложение
-    bot = application.bot  # получаем объект бота
-    update = Update.de_json(json_str, bot)  # передаем объект бота в функцию
-    application.dispatcher.process_update(update)  # обрабатываем обновление
-    return {'status': 'ok'}
-
     # Запуск FastAPI
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    if __name__ == "__main__":
+        import uvicorn
+        uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
     import asyncio
