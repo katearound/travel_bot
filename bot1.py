@@ -72,10 +72,15 @@ async def main():
 
     application.add_handler(conv_handler)
 
-    # Устанавливаем вебхук
-    bot = application.bot
-    webhook_url = f"https://travel-bot-22jb.onrender.com/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    await bot.set_webhook(url=webhook_url)  # Вызов с await, так как FastAPI поддерживает асинхронность
+    # Настройка вебхука
+@app.post(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}')
+async def webhook(request: Request):
+    json_str = await request.json()
+    application = create_application()  # создаем приложение
+    bot = application.bot  # получаем объект бота
+    update = Update.de_json(json_str, bot)  # передаем объект бота в функцию
+    application.dispatcher.process_update(update)  # обрабатываем обновление
+    return {'status': 'ok'}
 
     # Запуск FastAPI
 if __name__ == "__main__":
