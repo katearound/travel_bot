@@ -1,29 +1,26 @@
 import logging
 import os
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
+import json
 from flask import Flask, request
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
+from telegram import ReplyKeyboardMarkup
 
-# Настройка логирования
+# Логирование
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# Континенты для выбора
+# Данные о континентах
 CONTINENTS = [["Африка"], ["Азия"], ["Европа"], ["Северная Америка"], ["Южная Америка"], ["Австралия"]]
 
-# Создание экземпляра Flask
-app = Flask(__name__)
+# Создаем бота
+def create_application():
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    application = ApplicationBuilder().token(token).build()
+    return application
 
-# Инициализация бота
-bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
-
-# Асинхронная функция для установки webhook
-async def set_webhook():
-    webhook_url = f"https://travel-bot-22jb.onrender.com/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    await bot.set_webhook(url=webhook_url)
-
-# Обработчик команд
+# Состояния и этапы разговора
 async def start(update: Update, context):
-    keyboard = [["Знаю точное место", "Не знаю точного места"]]
+    keyboard = [["Знаю точное место", "Не знаю точное место"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     await update.message.reply_text("Привет! Куда вы хотите поехать?", reply_markup=reply_markup)
     return 1
@@ -47,20 +44,22 @@ async def cancel(update: Update, context):
     await update.message.reply_text("Прощайте!")
     return ConversationHandler.END
 
-# Обработчик webhook
+# Вебхук для получения обновлений от Telegram
+app = Flask(__name__)
+
 @app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
 def webhook():
     json_str = request.get_data().decode('UTF-8')
-    update = Update.de_json(json_str, bot)  # Используем глобальный объект bot
-    application.update_queue.put(update)
-    return 'ok', 200
+    update = Update.de_json(json.loads(json_str), bot)
+    dispatcher.process_update(update)
+    return 'OK'
 
-# Настройка бота и webhook
-async def main():
-    # Токен бота
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    application = ApplicationBuilder().token(token).build()
-
+# Настройка бота
+def main():
+    # Создаем бота
+    application = create_application()
+    
+    # Добавляем обработчик команд
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -73,12 +72,15 @@ async def main():
     
     application.add_handler(conv_handler)
     
-    # Настроить webhook
-    await set_webhook()
+    # Устанавливаем вебхук
+    bot = application.bot
+    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_URL')}/{os.getenv('TELEGRAM_BOT_TOKEN')}"
+    bot.set_webhook(url=webhook_url)
 
     # Запуск Flask
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    if __name__ == "__main__":
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+        application.run_polling()
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
