@@ -30,8 +30,8 @@ async def cancel(update: Update, context):
 
 def main():
     import os
-token = os.getenv("TELEGRAM_BOT_TOKEN")
-application = ApplicationBuilder().token(token).build()
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    application = ApplicationBuilder().token(token).build()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
