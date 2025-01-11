@@ -74,7 +74,7 @@ async def main():
 
     # Устанавливаем вебхук
     bot = application.bot
-    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_URL')}/{os.getenv('TELEGRAM_BOT_TOKEN')}"
+    webhook_url = f"https://travel-bot-22jb.onrender.com/{os.getenv('TELEGRAM_BOT_TOKEN')}"
     await bot.set_webhook(url=webhook_url)  # Вызов с await, так как FastAPI поддерживает асинхронность
 
     # Запуск FastAPI
