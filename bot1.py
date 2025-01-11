@@ -50,15 +50,15 @@ app = Flask(__name__)
 @app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
 def webhook():
     json_str = request.get_data().decode('UTF-8')
-    update = Update.de_json(json.loads(json_str), bot)
-    dispatcher.process_update(update)
+    update = Update.de_json(json.loads(json_str), bot)  # bot должен быть определен до этого
+    application.dispatcher.process_update(update)  # dispatcher должен быть у объекта application
     return 'OK'
 
 # Настройка бота
-async def main():
+def main():
     # Создаем бота
     application = create_application()
-    
+
     # Добавляем обработчик команд
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -69,19 +69,16 @@ async def main():
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
-    
+
     application.add_handler(conv_handler)
-    
+
     # Устанавливаем вебхук
     bot = application.bot
     webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_URL')}/{os.getenv('TELEGRAM_BOT_TOKEN')}"
-    await bot.set_webhook(url=webhook_url)  # Добавлен await
-    
+    bot.set_webhook(url=webhook_url)  # Здесь уже синхронный вызов
+
     # Запуск Flask
-    if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-        await application.run_polling()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
